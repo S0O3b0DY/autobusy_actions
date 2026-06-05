@@ -1,0 +1,65 @@
+name: Codzienny Import GTFS do Supabase
+
+on:
+  schedule:
+    # Uruchamiaj codziennie o 03:00 w nocy czasu UTC (ok. 4:00 lub 5:00 rano czasu polskiego)
+    - cron: '0 3 * * *'
+  workflow_dispatch: # Pozwala na ręczne odpalenie importu przyciskiem w panelu GitHub Actions
+
+jobs:
+  import_gtfs:
+    name: Pobieranie i import danych GTFS
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Instalacja klienta PostgreSQL (psql) w systemie Linux
+    - name: Zainstaluj psql
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y postgresql-client
+
+    # 2. Pobieranie spakowanej paczki GTFS (26,5 MB)
+    - name: Pobierz plik GTFS ZIP
+      run: |
+        echo "Pobieranie pliku GTFS..."
+        curl -L -o gtfs.zip "https://otwarte.miasto.lodz.pl/wp-content/uploads/2025/06/GTFS.zip"
+
+    # 3. Rozpakowanie archiwum ZIP do tymczasowego folderu
+    - name: Rozpakuj plik ZIP
+      run: |
+        echo "Rozpakowywanie archiwum..."
+        unzip gtfs.zip -d gtfstxt
+
+    # 4. Sekwencyjny import danych do bazy Supabase za pomocą psql i \copy
+    - name: Importuj dane do Supabase
+      env:
+        # Pobieranie bezpiecznego connection stringa z ustawień repozytorium
+        # echo "Krok 2: Importowanie podstawowych słowników (Agency, Feed Info)..."
+        # psql "$DB_URL" -c "\copy public.gtfs_agency FROM 'gtfstxt/agency.txt' DELIMITER ',' CSV HEADER;"
+        # psql "$DB_URL" -c "\copy public.gtfs_feed_info FROM 'gtfstxt/feed_info.txt' DELIMITER ',' CSV HEADER;"
+        DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      run: |
+        echo "--- ROZPOCZĘCIE IMPORTU ---"
+        
+        echo "Krok 1: Czyszczenie starych danych z bazy..."
+        psql "$DB_URL" -c "SELECT public.clear_gtfs_data();"
+
+        echo "Krok 3: Importowanie kalendarzy i wyjątków..."
+        psql "$DB_URL" -c "\copy public.gtfs_calendar FROM 'gtfstxt/calendar.txt' DELIMITER ',' CSV HEADER;"
+        psql "$DB_URL" -c "\copy public.gtfs_calendar_dates FROM 'gtfstxt/calendar_dates.txt' DELIMITER ',' CSV HEADER;"
+        
+        echo "Krok 4: Importowanie przystanków i linii (Stops, Routes)..."
+        psql "$DB_URL" -c "\copy public.gtfs_stops FROM 'gtfstxt/stops.txt' DELIMITER ',' CSV HEADER;"
+        psql "$DB_URL" -c "\copy public.gtfs_routes FROM 'gtfstxt/routes.txt' DELIMITER ',' CSV HEADER;"
+        
+        echo "Krok 5: Importowanie geometrii tras (Shapes)..."
+        psql "$DB_URL" -c "\copy public.gtfs_shapes FROM 'gtfstxt/shapes.txt' DELIMITER ',' CSV HEADER;"
+        
+        echo "Krok 6: Importowanie kursów (Trips)..."
+        psql "$DB_URL" -c "\copy public.gtfs_trips FROM 'gtfstxt/trips.txt' DELIMITER ',' CSV HEADER;"
+        
+        echo "Krok 7: Importowanie głównego rozkładu (Stop Times - 150MB)..."
+        # Ta operacja potrwa najdłużej (zwykle około 30-60 sekund w zależności od obciążenia Supabase)
+        psql "$DB_URL" -c "\copy public.gtfs_stop_times FROM 'gtfstxt/stop_times.txt' DELIMITER ',' CSV HEADER;"
+        
+        echo "--- IMPORT ZAKOŃCZONY SUKCESEM ---"
