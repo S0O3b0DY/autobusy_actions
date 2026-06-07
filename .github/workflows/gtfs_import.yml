@@ -2,7 +2,7 @@ name: Codzienny Import GTFS do Supabase
 on:
   schedule:
     # Uruchamiaj codziennie o 03:00 w nocy czasu UTC (ok. 4:00 lub 5:00 rano czasu polskiego)
-    - cron: '0 3 * * *'
+    - cron: '0 3 */3 * *'
   workflow_dispatch: # Pozwala na ręczne odpalenie importu przyciskiem w panelu GitHub Actions
 
 jobs:
@@ -58,13 +58,13 @@ jobs:
         psql -d "$DB_URL" -c "\copy public.gtfs_routes FROM 'gtfstxt/routes.txt' DELIMITER ',' CSV HEADER;"
         
         echo "Krok 5: Importowanie geometrii tras (Shapes)..."
-        psql -d "$DB_URL" -c "\copy public.gtfs_shapes FROM 'gtfstxt/shapes.txt' DELIMITER ',' CSV HEADER;"
+        psql -d "$DB_URL" -c "\copy public.gtfs_shapes (shape_id, shape_pt_lat, shape_pt_lon, shape_pt_sequence, shape_dist_traveled) FROM 'gtfstxt/shapes.txt' DELIMITER ',' CSV HEADER;"
         
         echo "Krok 6: Importowanie kursów (Trips)..."
         psql -d "$DB_URL" -c "\copy public.gtfs_trips FROM 'gtfstxt/trips.txt' DELIMITER ',' CSV HEADER;"
         
         echo "Krok 7: Importowanie głównego rozkładu (Stop Times - 150MB)..."
         # Ta operacja potrwa najdłużej (zwykle około 30-60 sekund w zależności od obciążenia Supabase)
-        psql -d "$DB_URL" -c "\copy public.gtfs_stop_times FROM 'gtfstxt/stop_times.txt' DELIMITER ',' CSV HEADER;"
+        psql -d "$DB_URL" -c "\copy public.gtfs_stop_times (trip_id, arrival_time, departure_time, stop_id, stop_sequence, stop_headsign, pickup_type, drop_off_type, shape_dist_traveled, timepoint) FROM 'gtfstxt/stop_times.txt' DELIMITER ',' CSV HEADER;"
         
         echo "--- IMPORT ZAKOŃCZONY SUKCESEM ---"
