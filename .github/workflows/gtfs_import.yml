@@ -21,13 +21,14 @@ jobs:
     - name: Pobierz plik GTFS ZIP
       run: |
         echo "Pobieranie pliku GTFS..."
-        curl -L -o lodz.zip "https://cdn.zbiorkom.live/gtfs/lodz.zip"
+        curl -L -o GTFS.zip "https://otwarte.miasto.lodz.pl/wp-content/uploads/2025/06/GTFS.zip"
+    #  https://cdn.zbiorkom.live/gtfs/lodz.zip
 
     # 3. Rozpakowanie archiwum ZIP do tymczasowego folderu
     - name: Rozpakuj plik ZIP
       run: |
         echo "Rozpakowywanie archiwum..."
-        unzip lodz.zip -d gtfstxt
+        unzip GTFS.zip -d gtfstxt
 
     # 4. Sekwencyjny import danych do bazy Supabase za pomocą psql i \copy
     - name: Importuj dane do Supabase
