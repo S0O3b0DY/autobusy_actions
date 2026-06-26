@@ -2,7 +2,7 @@ name: Codzienny Import GTFS do Supabase
 on:
   schedule:
     # Uruchamiaj codziennie o 03:00 w nocy czasu UTC (ok. 4:00 lub 5:00 rano czasu polskiego)
-    - cron: '0 3 */2 * *'
+    - cron: '0 3 * * *'
   workflow_dispatch: # Pozwala na ręczne odpalenie importu przyciskiem w panelu GitHub Actions
 
 jobs:
