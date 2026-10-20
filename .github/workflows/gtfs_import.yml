@@ -68,4 +68,4 @@ jobs:
         # Ta operacja potrwa najdłużej (zwykle około 30-60 sekund w zależności od obciążenia Supabase)
         psql -d "$DB_URL" -c "\copy public.gtfs_stop_times (trip_id, arrival_time, departure_time, stop_id, stop_sequence, stop_headsign, pickup_type, drop_off_type, shape_dist_traveled, timepoint) FROM 'gtfstxt/stop_times.txt' DELIMITER ',' CSV HEADER;"
         
-        echo "--- IMPORT ZAKOŃCZONY SUKCESEM ---"
+        echo "--- IMPORT ZAKOŃCZONY SUKCESEM v2 ---"
