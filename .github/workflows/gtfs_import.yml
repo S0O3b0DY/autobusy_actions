@@ -21,7 +21,7 @@ jobs:
     - name: Pobierz plik GTFS ZIP
       run: |
         echo "Pobieranie pliku GTFS..."
-        curl -L -o GTFS.zip "https://otwarte.miasto.lodz.pl/wp-content/uploads/2025/06/GTFS.zip"
+        curl -L -o GTFS.zip "https://api.zbiorkom.live/api6-open/lodz/gtfs/default"
     #  https://cdn.zbiorkom.live/gtfs/lodz.zip
 
     # 3. Rozpakowanie archiwum ZIP do tymczasowego folderu
